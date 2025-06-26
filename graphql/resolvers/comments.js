@@ -44,8 +44,9 @@ export default {
 
         let comment = await Comment.create({
           text,
-          userComicId,
+          userId: user.id,
           reviewId,
+          typename: "Comment",
         });
 
         comment = await Comment.findOne({

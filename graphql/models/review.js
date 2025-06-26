@@ -13,6 +13,7 @@ export default (sequelize, DataTypes) => {
       comicId: DataTypes.INTEGER,
       userId: DataTypes.INTEGER,
       text: DataTypes.STRING,
+      typename: DataTypes.STRING,
     },
     {
       sequelize,

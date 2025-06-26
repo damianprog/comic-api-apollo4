@@ -86,6 +86,7 @@ export default {
           category,
           comicId: comic.id,
           userId: user.id,
+          typename: "UserComic",
         });
 
         // Finding just created userComic to get associated objects

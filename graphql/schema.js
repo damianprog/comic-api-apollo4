@@ -68,8 +68,10 @@ const typeDefs = `#graphql
     id: ID!
     comic: Comic!
     user: User!
+    comments: [Comment]
     text: String!
     createdAt: String
+    typename: String
   }
 
   type UserComic {
@@ -78,17 +80,19 @@ const typeDefs = `#graphql
     comic: Comic!
     category: String
     createdAt: String
+    typename: String
   }
 
   type Comment {
     id: ID!
-    userComic: UserComic
     review: Review
     user: User!
     text: String!
+    createdAt: String
+    typename: String
   }
 
-  union UserActivity = UserComic | Review
+  union UserActivity = UserComic | Review | Comment
 
   type Query {
     user(where: UserSearch!): User

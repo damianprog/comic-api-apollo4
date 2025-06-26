@@ -60,6 +60,7 @@ export default {
           text,
           comicId: comic.id,
           userId: user.id,
+          typename: "Review",
         });
 
         review = await Review.findOne({

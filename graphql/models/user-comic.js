@@ -5,7 +5,7 @@ export default (sequelize, DataTypes) => {
     static associate({ Comic, User, Comment }) {
       this.belongsTo(Comic, { foreignKey: "comicId", as: "comic" });
       this.belongsTo(User, { foreignKey: "userId", as: "user" });
-      // this.hasMany(Comment, { foreignKey: "userComicId", as: "comments" });
+      this.hasMany(Comment, { foreignKey: "userComicId", as: "comments" });
     }
   }
   UserComic.init(
@@ -13,6 +13,7 @@ export default (sequelize, DataTypes) => {
       category: DataTypes.STRING,
       comicId: DataTypes.INTEGER,
       userId: DataTypes.INTEGER,
+      typename: DataTypes.STRING,
     },
     {
       sequelize,

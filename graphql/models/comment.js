@@ -1,9 +1,8 @@
 "use strict";
-import { Model } from "sequelize";
+import { INTEGER, Model } from "sequelize";
 export default (sequelize, DataTypes) => {
   class Comment extends Model {
-    static associate({ UserComic, Review, User }) {
-      this.belongsTo(UserComic, { foreignKey: "userComicId", as: "userComic" });
+    static associate({ Review, User, Comic }) {
       this.belongsTo(Review, { foreignKey: "reviewId", as: "review" });
       this.belongsTo(User, { foreignKey: "userId", as: "user" });
     }
@@ -11,13 +10,12 @@ export default (sequelize, DataTypes) => {
   Comment.init(
     {
       text: DataTypes.STRING,
-      userComicId: DataTypes.INTEGER,
       reviewId: DataTypes.INTEGER,
       userId: DataTypes.INTEGER,
+      typename: DataTypes.STRING,
     },
     {
       sequelize,
-      underscored: true,
       tableName: "comments",
       modelName: "Comment",
     }

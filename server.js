@@ -5,10 +5,12 @@ import typeDefs from "./graphql/schema.js";
 import resolvers from "./graphql/resolvers/index.js";
 // import jwt from "express-jwt";
 import jwt from "jsonwebtoken";
-import JWT_SECRET from "./config.js";
 import cors from "cors";
 
 import express from "express";
+
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 
@@ -20,7 +22,7 @@ await server.start();
 
 function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
     return null;
   }

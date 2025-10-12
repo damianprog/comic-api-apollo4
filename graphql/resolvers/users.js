@@ -9,12 +9,14 @@ import {
   validateSigninInput,
   validateUpdateUserInput,
 } from "../../utils/validators/user-mutations-validators.js";
-import JWT_SECRET from "../../config.js";
 import updateUserProperties from "../resolvers-utils/users-utils.js";
 
 import models from "../models/index.js";
 const User = models["User"];
 const UserDetails = models["UserDetails"];
+
+import dotenv from "dotenv";
+dotenv.config();
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -22,7 +24,7 @@ const generateToken = (user) => {
       id: user.id,
       email: user.email,
     },
-    JWT_SECRET,
+    process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
 };

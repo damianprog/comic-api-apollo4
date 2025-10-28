@@ -122,6 +122,8 @@ const typeDefs = `#graphql
     createUserComic(newComicInput: NewComicInput!, category: String!): UserComic
     deleteUserComic(id: ID): UserComic
     createComment(userComicId: ID, reviewId: ID, text: String!): Comment
+    updateComment(commentId: ID, text: String!): Comment
+    deleteComment(id: ID): Comment
   }
 `;
 

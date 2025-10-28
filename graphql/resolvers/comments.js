@@ -28,6 +28,7 @@ export default {
           ],
         },
         include: { all: true, nested: true },
+        order: [["createdAt", "DESC"]],
       });
 
       return foundComments;
@@ -56,6 +57,51 @@ export default {
 
         return comment;
       }
+      throw new AuthenticationError("Sorry, you're not an authenticated user!");
+    },
+
+    async updateComment(_, { commentId, text }, { user }) {
+      if (user) {
+        const { errors, valid } = validateCommentInput({ text });
+
+        if (!valid) {
+          throw new UserInputError("Errors", errors);
+        }
+
+        let comment = await Comment.findOne({
+          where: { id: commentId },
+          include: { all: true, nested: true },
+        });
+
+        let updatedComment = await comment.update({
+          text,
+        });
+
+        return updatedComment;
+      }
+      throw new AuthenticationError("Sorry, you're not an authenticated user!");
+    },
+
+    async deleteComment(_, { id }, { user }) {
+      if (user) {
+        const deletedComment = await Comment.findOne({
+          where: { id },
+          include: { all: true, nested: true },
+        });
+
+        if (!deletedComment) {
+          throw new UserInputError("Comment with provided id does not exist");
+        }
+
+        if (deletedComment.user.id !== user.id) {
+          throw new UserInputError("Sorry, you're not the owner of this item!");
+        }
+
+        deletedComment.destroy();
+
+        return deletedComment;
+      }
+
       throw new AuthenticationError("Sorry, you're not an authenticated user!");
     },
   },

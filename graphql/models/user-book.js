@@ -2,47 +2,47 @@
 import { Model } from "sequelize";
 
 export default (sequelize, DataTypes) => {
-  class Review extends Model {
-    static associate({ Book, User, Comment }) {
-      this.belongsTo(Book, { foreignKey: "bookId", as: "book" });
+  class UserBook extends Model {
+    static associate({ User, Book, Comment }) {
       this.belongsTo(User, { foreignKey: "userId", as: "user" });
-      this.hasMany(Comment, { foreignKey: "reviewId", as: "comments" });
+      this.belongsTo(Book, { foreignKey: "bookId", as: "book" });
+      this.hasMany(Comment, { foreignKey: "userBookId", as: "comments" });
     }
   }
 
-  Review.init(
+  UserBook.init(
     {
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      bookId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        field: "book_id",
-      },
       userId: {
         type: DataTypes.UUID,
         allowNull: false,
         field: "user_id",
       },
-      text: {
-        type: DataTypes.TEXT,
+      bookId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        field: "book_id",
       },
       typename: {
+        type: DataTypes.STRING,
+      },
+      category: {
         type: DataTypes.STRING,
       },
     },
     {
       sequelize,
-      tableName: "reviews",
-      modelName: "Review",
+      tableName: "user_books",
+      modelName: "UserBook",
       timestamps: true,
       createdAt: "created_at",
       updatedAt: "updated_at",
     },
   );
 
-  return Review;
+  return UserBook;
 };

@@ -51,6 +51,14 @@ const typeDefs = `#graphql
     linkingUrl: String
   }
 
+  type ExternalComic {
+    id: ID!
+    title: String!
+    description: String
+    coverImage: String
+    seriesId: String
+  }
+
   input NewComicInput {
     id: ID!
     title: String!
@@ -97,6 +105,7 @@ const typeDefs = `#graphql
   type Query {
     user(where: UserSearch!): User
     comic(id: ID): Comic
+    searchComics(title: String): [ExternalComic]
     # currentUser: User!
     review(id: ID!): Review
     reviews(userId: ID, comicId: ID): [Review]

@@ -34,12 +34,14 @@ export const validateSignupInput = ({
 
 export const validateSigninInput = ({ email, password }) => {
   const emailErrors = validateEmail(email);
-  const passwordErrors = validatePassword(password);
-
   const errors = {
     ...emailErrors,
-    ...passwordErrors,
   };
+
+  if (!password || password.trim?.() === "") {
+    errors.password = "Password must not be empty";
+  }
+
   return {
     errors,
     valid: Object.keys(errors).length === 0,

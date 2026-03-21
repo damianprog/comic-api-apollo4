@@ -1,41 +1,22 @@
+"use strict";
+
 import fs from "fs";
 import path from "path";
-import Sequelize from "sequelize";
-// const env = process.env.NODE_ENV || 'development';
-import { devConfig, prodConfig } from "../../db-config/db-config.js";
-import comicModel from "./comic.js";
-import commentModel from "./comment.js";
-import reviewModel from "./review.js";
-import userComicModel from "./user-comic.js";
-import userDetailsModel from "./user-details.js";
-import userModel from "./user.js";
+import { Sequelize, DataTypes } from "sequelize";
+import process from "process";
 
-const models = [
-  comicModel,
-  commentModel,
-  reviewModel,
-  userComicModel,
-  userDetailsModel,
-  userModel,
-];
+const basename = path.basename(new URL(import.meta.url).pathname);
+const env = process.env.NODE_ENV || "development";
+const config = (
+  await import("../../config/config.json", {
+    assert: { type: "json" },
+  })
+).default[env];
 
-// let sslConfig = { dialect: 'postgres' };
-
-// if (env === 'production') {
-//   sslConfig = {
-//     dialect: 'postgres',
-//     dialectOptions: {
-//       ssl: {
-//         require: true,
-//         rejectUnauthorized: false,
-//       },
-//     },
-//   };
-// }
-
-const config = devConfig;
+const db = {};
 
 let sequelize;
+
 if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
@@ -47,18 +28,23 @@ if (config.use_env_variable) {
   );
 }
 
-// const sequelize = new Sequelize(config, sslConfig)
+import User from "./user.js";
+import UserDetails from "./user-details.js";
+import Book from "./book.js";
+import UserBook from "./user-book.js";
+import Review from "./review.js";
+import Comment from "./comment.js";
 
-const db = {};
+db.User = User(sequelize, DataTypes);
+db.UserDetails = UserDetails(sequelize, DataTypes);
+db.Book = Book(sequelize, DataTypes);
+db.UserBook = UserBook(sequelize, DataTypes);
+db.Review = Review(sequelize, DataTypes);
+db.Comment = Comment(sequelize, DataTypes);
 
-models.forEach((model) => {
-  const connectedModel = model(sequelize, Sequelize.DataTypes);
-  db[connectedModel.name] = connectedModel;
-});
-
-Object.values(db).forEach((connectedModel) => {
-  if (connectedModel.associate) {
-    connectedModel.associate(db);
+Object.values(db).forEach((model) => {
+  if (model.associate) {
+    model.associate(db);
   }
 });
 

@@ -1,5 +1,5 @@
 import { ApolloServer } from "@apollo/server";
-import { expressMiddleware } from "@apollo/server/express4";
+import { expressMiddleware } from "@as-integrations/express5";
 import { ruruHTML } from "ruru/server";
 import typeDefs from "./graphql/schema.js";
 import resolvers from "./graphql/resolvers/index.js";
@@ -32,7 +32,7 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
-  })
+  }),
 );
 
 app.use(
@@ -45,7 +45,7 @@ app.use(
       const user = verifyToken(token);
       return { user };
     },
-  })
+  }),
 );
 app.get("/", (_req, res) => {
   res.type("html");

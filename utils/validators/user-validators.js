@@ -1,13 +1,17 @@
 export const validateNickname = (nickname) => {
   const errors = {};
-  if (nickname.trim() === "") {
+  const normalizedNickname = nickname?.trim() || "";
+
+  if (normalizedNickname === "") {
     errors.nickname = "Nickname must not be empty";
-  }
-  if (nickname.trim().length > 20) {
-    errors.nickname = "Maximum length of nickname is 20";
-  }
-  if (nickname.trim().length < 3) {
-    errors.nickname = "Minimum length of nickname is 3";
+  } else {
+    if (normalizedNickname.length > 20) {
+      errors.nickname = "Maximum length of nickname is 20";
+    }
+
+    if (normalizedNickname.length < 3) {
+      errors.nickname = "Minimum length of nickname is 3";
+    }
   }
 
   return errors;
@@ -15,12 +19,15 @@ export const validateNickname = (nickname) => {
 
 export const validateEmail = (email) => {
   const errors = {};
-  if (email.trim() === "") {
+  const normalizedEmail = email?.trim() || "";
+
+  if (normalizedEmail === "") {
     errors.email = "Email must not be empty";
   } else {
     const regEx =
-      /^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9})$/;
-    if (!email.match(regEx)) {
+      /^([0-9a-zA-Z]([-\.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9})$/;
+
+    if (!regEx.test(normalizedEmail)) {
       errors.email = "Email must be a valid email address";
     }
   }
@@ -30,11 +37,18 @@ export const validateEmail = (email) => {
 
 export const validatePassword = (password) => {
   const errors = {};
-  if (password.length > 25) {
-    errors.password = "Maximum length of password is 25";
-  }
-  if (password.length < 6) {
-    errors.password = "Minimum length of password is 6";
+  const normalizedPassword = password || "";
+
+  if (normalizedPassword === "") {
+    errors.password = "Password must not be empty";
+  } else {
+    if (normalizedPassword.length > 25) {
+      errors.password = "Maximum length of password is 25";
+    }
+
+    if (normalizedPassword.length < 6) {
+      errors.password = "Minimum length of password is 6";
+    }
   }
 
   return errors;
@@ -42,7 +56,9 @@ export const validatePassword = (password) => {
 
 export const validateBirthDate = (birthDate) => {
   const errors = {};
-  if (birthDate.trim() === "") {
+  const normalizedBirthDate = birthDate?.trim() || "";
+
+  if (normalizedBirthDate === "") {
     errors.birthDate = "Birth date must not be empty";
   }
 
@@ -51,7 +67,9 @@ export const validateBirthDate = (birthDate) => {
 
 export const validateInterests = (interests) => {
   const errors = {};
-  if (interests.trim().length > 150) {
+  const normalizedInterests = interests?.trim() || "";
+
+  if (normalizedInterests.length > 150) {
     errors.interests = "Maximum length of interests is 150";
   }
 
@@ -60,7 +78,9 @@ export const validateInterests = (interests) => {
 
 export const validateAbout = (about) => {
   const errors = {};
-  if (about.trim().length > 250) {
+  const normalizedAbout = about?.trim() || "";
+
+  if (normalizedAbout.length > 250) {
     errors.about = "Maximum length of about is 250";
   }
 
@@ -69,11 +89,11 @@ export const validateAbout = (about) => {
 
 export const validateUserComicCategory = (category) => {
   const errors = {};
-  if (category.trim().length === 0) {
-    errors.category = "Category must not empty";
-  }
+  const normalizedCategory = category?.trim() || "";
 
-  if (category.trim().length > 20) {
+  if (normalizedCategory.length === 0) {
+    errors.category = "Category must not be empty";
+  } else if (normalizedCategory.length > 20) {
     errors.category = "Maximum length of category is 20";
   }
 

@@ -1,6 +1,6 @@
-const { validateText } = require('./comment-validators');
+import { validateText } from "./comment-validators.js";
 
-module.exports.validateCommentInput = ({ text }) => {
+export const validateCommentInput = ({ text }) => {
   const textErrors = validateText(text);
   const errors = {
     ...textErrors,

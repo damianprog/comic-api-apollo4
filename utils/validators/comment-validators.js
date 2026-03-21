@@ -1,10 +1,13 @@
-module.exports.validateText = (text) => {
+export const validateText = (text) => {
   const errors = {};
-  if (text.trim().length === 0) {
-    errors.text = 'Comment must not be empty';
+  const normalizedText = text?.trim() || "";
+
+  if (normalizedText.length === 0) {
+    errors.text = "Comment must not be empty";
   }
-  if (text.length > 5000) {
-    errors.text = 'Maximum length of comment is 1000';
+
+  if (normalizedText.length > 5000) {
+    errors.text = "Maximum length of comment is 5000";
   }
 
   return errors;

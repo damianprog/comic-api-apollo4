@@ -2,14 +2,14 @@ import { AuthenticationError, UserInputError } from "apollo-server-errors";
 import { validateCreateUserComicInput } from "../../utils/validators/user-mutations-validators.js";
 
 import models from "../models/index.js";
-const Comic = models["Comic"];
-const UserComic = models["UserComic"];
+const Book = models["Book"];
+const UserBook = models["UserBook"];
 const User = models["User"];
 
 export default {
   Query: {
-    async userComics(_, { userId, nickname, comicId }) {
-      let userComics = [];
+    async userBooks(_, { userId, nickname, bookId }) {
+      let userBooks = [];
       let foundUserId = userId;
 
       if (nickname) {
@@ -17,21 +17,22 @@ export default {
         foundUserId = user ? user.id : foundUserId;
       }
 
-      if (foundUserId && comicId) {
-        userComics = await UserComic.findAll({
-          where: { userId: foundUserId, comicId },
-          include: ["comic", "user"],
+      if (foundUserId && bookId) {
+        userBooks = await UserBook.findAll({
+          where: { userId: foundUserId, bookId },
+          include: ["book", "user"],
         });
       } else if (foundUserId) {
-        userComics = await UserComic.findAll({
+        userBooks = await UserBook.findAll({
           where: { userId: foundUserId },
-          include: ["comic", "user"],
+          include: ["book", "user"],
         });
       }
 
-      return userComics;
+      return userBooks;
     },
-    async userComicsCategories(_, { userId, nickname }) {
+
+    async userBooksCategories(_, { userId, nickname }) {
       let foundUserId = userId;
 
       if (nickname) {
@@ -39,27 +40,27 @@ export default {
         foundUserId = user ? user.id : foundUserId;
       }
 
-      const userComics = await UserComic.findAll({
+      const userBooks = await UserBook.findAll({
         where: { userId: foundUserId },
         raw: true,
       });
 
-      const allUserComicsCategories = userComics.map(
-        (userComic) => userComic.category
+      const allUserBooksCategories = userBooks.map(
+        (userBook) => userBook.category,
       );
-      const uniqueUserComicsCategories = [...new Set(allUserComicsCategories)];
+      const uniqueUserBooksCategories = [...new Set(allUserBooksCategories)];
 
-      uniqueUserComicsCategories.sort();
+      uniqueUserBooksCategories.sort();
 
-      return uniqueUserComicsCategories;
+      return uniqueUserBooksCategories;
     },
   },
 
   Mutation: {
-    async createUserComic(_, { newComicInput, category }, { user }) {
+    async createUserBook(_, { newBookInput, category }, { user }) {
       if (user) {
         const { valid, errors } = validateCreateUserComicInput({
-          ...newComicInput,
+          ...newBookInput,
           category,
         });
 
@@ -67,56 +68,58 @@ export default {
           throw new UserInputError("Errors", errors);
         }
 
-        const alreadyCreatedUserComic = await UserComic.findOne({
-          where: { comicId: newComicInput.id, userId: user.id, category },
+        const alreadyCreatedUserBook = await UserBook.findOne({
+          where: { bookId: newBookInput.id, userId: user.id, category },
         });
 
-        if (alreadyCreatedUserComic) {
-          const errors = { category: "Comic is already in this category" };
+        if (alreadyCreatedUserBook) {
+          const errors = { category: "Book is already in this category" };
           throw new UserInputError("Errors", errors);
         }
 
-        const { id } = newComicInput;
-        let comic = await Comic.findOne({ where: { id } });
-        if (!comic) {
-          comic = await Comic.create(newComicInput);
+        const { id } = newBookInput;
+        let book = await Book.findOne({ where: { id } });
+
+        if (!book) {
+          book = await Book.create(newBookInput);
         }
 
-        let newUserComic = await UserComic.create({
+        let newUserBook = await UserBook.create({
           category,
-          comicId: comic.id,
+          bookId: book.id,
           userId: user.id,
-          typename: "UserComic",
+          typename: "UserBook",
         });
 
-        // Finding just created userComic to get associated objects
-        newUserComic = await UserComic.findOne({
-          where: { id: newUserComic.id },
-          include: ["comic", "user"],
+        newUserBook = await UserBook.findOne({
+          where: { id: newUserBook.id },
+          include: ["book", "user"],
         });
 
-        return newUserComic;
+        return newUserBook;
       }
+
       throw new AuthenticationError("Sorry, you're not an authenticated user!");
     },
-    async deleteUserComic(_, { id }, { user }) {
+
+    async deleteUserBook(_, { id }, { user }) {
       if (user) {
-        const deletedUserComic = await UserComic.findOne({
+        const deletedUserBook = await UserBook.findOne({
           where: { id },
-          include: ["user", "comic"],
+          include: ["user", "book"],
         });
 
-        if (!deletedUserComic) {
-          throw new UserInputError("UserComic with provided id does not exist");
+        if (!deletedUserBook) {
+          throw new UserInputError("UserBook with provided id does not exist");
         }
 
-        if (deletedUserComic.user.id !== user.id) {
+        if (deletedUserBook.user.id !== user.id) {
           throw new UserInputError("Sorry, you're not the owner of this item!");
         }
 
-        deletedUserComic.destroy();
+        await deletedUserBook.destroy();
 
-        return deletedUserComic;
+        return deletedUserBook;
       }
 
       throw new AuthenticationError("Sorry, you're not an authenticated user!");

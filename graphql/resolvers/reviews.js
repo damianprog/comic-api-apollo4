@@ -3,7 +3,7 @@ import { Op } from "sequelize";
 import { validateReviewInput } from "../../utils/validators/review-mutations-validators.js";
 
 import models from "../models/index.js";
-const Comic = models["Comic"];
+const Book = models["Book"];
 const Review = models["Review"];
 
 export default {
@@ -16,15 +16,16 @@ export default {
 
       return foundReview;
     },
-    async reviews(_, { userId, comicId }) {
+
+    async reviews(_, { userId, bookId }) {
       const foundReviews = await Review.findAll({
         where: {
           [Op.or]: [
             {
-              comicId: comicId ? comicId : 0,
+              bookId: bookId ? bookId : null,
             },
             {
-              userId: userId ? userId : 0,
+              userId: userId ? userId : null,
             },
           ],
         },
@@ -34,8 +35,9 @@ export default {
       return foundReviews;
     },
   },
+
   Mutation: {
-    async createReview(_, { newComicInput, text }, { user }) {
+    async createReview(_, { newBookInput, text }, { user }) {
       if (user) {
         const { errors, valid } = validateReviewInput({ text });
 
@@ -44,28 +46,30 @@ export default {
         }
 
         const alreadyCreatedReview = await Review.findOne({
-          where: { comicId: newComicInput.id, userId: user.id },
+          where: { bookId: newBookInput.id, userId: user.id },
         });
 
-        if (alreadyCreatedReview)
+        if (alreadyCreatedReview) {
           throw new UserInputError("Provided Review already exists");
+        }
 
-        const { id } = newComicInput;
-        let comic = await Comic.findOne({ where: { id } });
-        if (!comic) {
-          comic = await Comic.create(newComicInput);
+        const { id } = newBookInput;
+        let book = await Book.findOne({ where: { id } });
+
+        if (!book) {
+          book = await Book.create(newBookInput);
         }
 
         let review = await Review.create({
           text,
-          comicId: comic.id,
+          bookId: book.id,
           userId: user.id,
           typename: "Review",
         });
 
         review = await Review.findOne({
           where: { id: review.dataValues.id },
-          include: ["comic", "user"],
+          include: ["book", "user"],
         });
 
         return review;
@@ -73,7 +77,8 @@ export default {
 
       throw new AuthenticationError("Sorry, you're not an authenticated user!");
     },
-    async updateReview(_, { comicId, text }, { user }) {
+
+    async updateReview(_, { bookId, text }, { user }) {
       if (user) {
         const { errors, valid } = validateReviewInput({ text });
 
@@ -82,9 +87,10 @@ export default {
         }
 
         const review = await Review.findOne({
-          where: { comicId, userId: user.id },
-          include: ["comic", "user"],
+          where: { bookId, userId: user.id },
+          include: ["book", "user"],
         });
+
         review.text = text;
         await review.save();
 
@@ -93,11 +99,12 @@ export default {
 
       throw new AuthenticationError("Sorry, you're not an authenticated user!");
     },
+
     async deleteReview(_, { id }, { user }) {
       if (user) {
         const deletedReview = await Review.findOne({
           where: { id },
-          include: ["user", "comic"],
+          include: ["user", "book"],
         });
 
         if (!deletedReview) {
@@ -108,7 +115,7 @@ export default {
           throw new UserInputError("Sorry, you're not the owner of this item!");
         }
 
-        deletedReview.destroy();
+        await deletedReview.destroy();
 
         return deletedReview;
       }

@@ -1,19 +1,19 @@
 import models from "../models/index.js";
 
-const Comic = models["Comic"];
+const Book = models["Book"];
 
 export default {
   Query: {
-    async comic(_, { id }) {
-      const comic = await Comic.findOne({ where: { id } });
-      return comic;
+    async book(_, { id }) {
+      const book = await Book.findOne({ where: { id } });
+      return book;
     },
   },
 
   Mutation: {
-    async createComic(_, { newComicInput }) {
-      const comic = await Comic.create(newComicInput);
-      return comic;
+    async createBook(_, args) {
+      const book = await Book.create(args);
+      return book;
     },
   },
 };

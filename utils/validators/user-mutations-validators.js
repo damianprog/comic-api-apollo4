@@ -5,7 +5,7 @@ import {
   validateBirthDate,
   validateInterests,
   validateAbout,
-  validateUserComicCategory,
+  validateUserBookCategory,
 } from "./user-validators.js";
 
 export const validateSignupInput = ({
@@ -71,8 +71,8 @@ export const validateUpdateUserInput = ({
   };
 };
 
-export const validateCreateUserComicInput = ({ category }) => {
-  const categoryErrors = validateUserComicCategory(category);
+export const validateCreateUserBookInput = ({ category }) => {
+  const categoryErrors = validateUserBookCategory(category);
 
   const errors = {
     ...categoryErrors,

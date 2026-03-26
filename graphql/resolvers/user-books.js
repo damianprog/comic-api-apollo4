@@ -1,5 +1,5 @@
 import { AuthenticationError, UserInputError } from "apollo-server-errors";
-import { validateCreateUserComicInput } from "../../utils/validators/user-mutations-validators.js";
+import { validateCreateUserBookInput } from "../../utils/validators/user-mutations-validators.js";
 
 import models from "../models/index.js";
 const Book = models["Book"];
@@ -75,28 +75,15 @@ export default {
   Mutation: {
     async createUserBook(_, { newBookInput, category }, { user }) {
       if (user) {
-        const { valid, errors } = validateCreateUserComicInput({
-          ...newBookInput,
-          category,
-        });
+        const { valid, errors } = validateCreateUserBookInput({ category });
 
         if (!valid) {
           throw new UserInputError("Errors", errors);
         }
 
-        let book = null;
-
-        if (newBookInput.id) {
-          book = await Book.findOne({
-            where: { id: newBookInput.id },
-          });
-        }
-
-        if (!book && newBookInput.googleBooksId) {
-          book = await Book.findOne({
-            where: { googleBooksId: newBookInput.googleBooksId },
-          });
-        }
+        let book = await Book.findOne({
+          where: { googleBooksId: newBookInput.googleBooksId },
+        });
 
         if (!book) {
           book = await Book.create(newBookInput);
@@ -131,6 +118,12 @@ export default {
 
     async updateUserBook(_, { userBookId, category }, { user }) {
       if (user) {
+        const { valid, errors } = validateCreateUserBookInput({ category });
+
+        if (!valid) {
+          throw new UserInputError("Errors", errors);
+        }
+
         const foundUserBook = await UserBook.findOne({
           where: { id: userBookId },
           include: { all: true, nested: true },
@@ -142,6 +135,19 @@ export default {
 
         if (foundUserBook.userId !== user.id) {
           throw new UserInputError("Sorry, you're not the owner of this item!");
+        }
+
+        const duplicateUserBook = await UserBook.findOne({
+          where: {
+            userId: user.id,
+            bookId: foundUserBook.bookId,
+            category,
+          },
+        });
+
+        if (duplicateUserBook && duplicateUserBook.id !== foundUserBook.id) {
+          const errors = { category: "Book is already in this category" };
+          throw new UserInputError("Errors", errors);
         }
 
         const updatedUserBook = await foundUserBook.update({

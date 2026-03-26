@@ -87,7 +87,7 @@ export const validateAbout = (about) => {
   return errors;
 };
 
-export const validateUserComicCategory = (category) => {
+export const validateUserBookCategory = (category) => {
   const errors = {};
   const normalizedCategory = category?.trim() || "";
 

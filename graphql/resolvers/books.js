@@ -22,11 +22,17 @@ export default {
       return foundBooks;
     },
 
-    async searchBooks(_, { title }) {
+    async searchBooks(_, { query }) {
+      const normalizedQuery = query.trim();
+
+      if (!normalizedQuery) {
+        throw new UserInputError("Query must not be empty");
+      }
+
       const foundBooks = await Book.findAll({
         where: {
           title: {
-            [Op.iLike]: `%${title}%`,
+            [Op.iLike]: `%${normalizedQuery}%`,
           },
         },
         order: [["createdAt", "DESC"]],
@@ -37,13 +43,23 @@ export default {
   },
 
   Mutation: {
-    async createBook(_, args) {
-      const createdBook = await Book.create(args);
+    async createBook(_, { newBookInput }) {
+      const existingBook = await Book.findOne({
+        where: { googleBooksId: newBookInput.googleBooksId },
+      });
+
+      if (existingBook) {
+        throw new UserInputError(
+          "Book with provided googleBooksId already exists",
+        );
+      }
+
+      const createdBook = await Book.create(newBookInput);
 
       return createdBook;
     },
 
-    async updateBook(_, { bookId, ...args }) {
+    async updateBook(_, { bookId, updateBookInput }) {
       const foundBook = await Book.findOne({
         where: { id: bookId },
       });
@@ -52,7 +68,7 @@ export default {
         throw new UserInputError("Book with provided id does not exist");
       }
 
-      const updatedBook = await foundBook.update(args);
+      const updatedBook = await foundBook.update(updateBookInput);
 
       return updatedBook;
     },

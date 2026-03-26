@@ -1,25 +1,25 @@
-import comicsResolvers from "./comics.js";
+import booksResolvers from "./books.js";
 import usersResolvers from "./users.js";
 import reviewsResolvers from "./reviews.js";
-import userComicsResolvers from "./user-comics.js";
+import userBooksResolvers from "./user-books.js";
 import userActivitiesResolvers from "./user-activities.js";
 import unions from "./unions.js";
 import commentsResolvers from "./comments.js";
 
 export default {
   Query: {
-    ...comicsResolvers.Query,
+    ...booksResolvers.Query,
     ...usersResolvers.Query,
     ...reviewsResolvers.Query,
-    ...userComicsResolvers.Query,
+    ...userBooksResolvers.Query,
     ...userActivitiesResolvers.Query,
     ...commentsResolvers.Query,
   },
   Mutation: {
-    ...comicsResolvers.Mutation,
+    ...booksResolvers.Mutation,
     ...usersResolvers.Mutation,
     ...reviewsResolvers.Mutation,
-    ...userComicsResolvers.Mutation,
+    ...userBooksResolvers.Mutation,
     ...commentsResolvers.Mutation,
   },
   ...unions,

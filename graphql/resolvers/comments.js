@@ -1,4 +1,4 @@
-import { AuthenticationError } from "apollo-server-errors";
+import { AuthenticationError, UserInputError } from "apollo-server-errors";
 import { Op } from "sequelize";
 import { validateCommentInput } from "../../utils/validators/comment-mutations-validators.js";
 
@@ -15,17 +15,27 @@ export default {
 
       return foundComment;
     },
-    async comments(_, { userComicId, reviewId }) {
+
+    async comments(_, { userBookId, reviewId }) {
+      if ((!userBookId && !reviewId) || (userBookId && reviewId)) {
+        throw new UserInputError(
+          "You must provide either userBookId or reviewId",
+        );
+      }
+
+      const conditions = [];
+
+      if (userBookId) {
+        conditions.push({ userBookId });
+      }
+
+      if (reviewId) {
+        conditions.push({ reviewId });
+      }
+
       const foundComments = await Comment.findAll({
         where: {
-          [Op.or]: [
-            {
-              userComicId: userComicId ? userComicId : 0,
-            },
-            {
-              reviewId: reviewId ? reviewId : 0,
-            },
-          ],
+          [Op.or]: conditions,
         },
         include: { all: true, nested: true },
         order: [["createdAt", "DESC"]],
@@ -34,8 +44,9 @@ export default {
       return foundComments;
     },
   },
+
   Mutation: {
-    async createComment(_, { userComicId, reviewId, text }, { user }) {
+    async createComment(_, { userBookId, reviewId, text }, { user }) {
       if (user) {
         const { errors, valid } = validateCommentInput({ text });
 
@@ -43,10 +54,17 @@ export default {
           throw new UserInputError("Errors", errors);
         }
 
+        if ((!userBookId && !reviewId) || (userBookId && reviewId)) {
+          throw new UserInputError(
+            "Comment must belong to either userBook or review",
+          );
+        }
+
         let comment = await Comment.create({
           text,
           userId: user.id,
           reviewId,
+          userBookId,
           typename: "Comment",
         });
 
@@ -57,6 +75,7 @@ export default {
 
         return comment;
       }
+
       throw new AuthenticationError("Sorry, you're not an authenticated user!");
     },
 
@@ -68,24 +87,33 @@ export default {
           throw new UserInputError("Errors", errors);
         }
 
-        let comment = await Comment.findOne({
+        const comment = await Comment.findOne({
           where: { id: commentId },
           include: { all: true, nested: true },
         });
 
-        let updatedComment = await comment.update({
+        if (!comment) {
+          throw new UserInputError("Comment with provided id does not exist");
+        }
+
+        if (comment.userId !== user.id) {
+          throw new UserInputError("Sorry, you're not the owner of this item!");
+        }
+
+        const updatedComment = await comment.update({
           text,
         });
 
         return updatedComment;
       }
+
       throw new AuthenticationError("Sorry, you're not an authenticated user!");
     },
 
-    async deleteComment(_, { id }, { user }) {
+    async deleteComment(_, { commentId }, { user }) {
       if (user) {
         const deletedComment = await Comment.findOne({
-          where: { id },
+          where: { id: commentId },
           include: { all: true, nested: true },
         });
 
@@ -93,13 +121,13 @@ export default {
           throw new UserInputError("Comment with provided id does not exist");
         }
 
-        if (deletedComment.user.id !== user.id) {
+        if (deletedComment.userId !== user.id) {
           throw new UserInputError("Sorry, you're not the owner of this item!");
         }
 
-        deletedComment.destroy();
+        await deletedComment.destroy();
 
-        return deletedComment;
+        return "Comment deleted successfully";
       }
 
       throw new AuthenticationError("Sorry, you're not an authenticated user!");

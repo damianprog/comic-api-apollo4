@@ -8,28 +8,40 @@ const User = models["User"];
 
 export default {
   Query: {
+    async userBook(_, { id }) {
+      const foundUserBook = await UserBook.findOne({
+        where: { id },
+        include: { all: true, nested: true },
+      });
+
+      return foundUserBook;
+    },
+
     async userBooks(_, { userId, nickname, bookId }) {
-      let userBooks = [];
       let foundUserId = userId;
 
       if (nickname) {
         const user = await User.findOne({ where: { nickname } });
-        foundUserId = user ? user.id : foundUserId;
+        foundUserId = user ? user.id : null;
       }
 
-      if (foundUserId && bookId) {
-        userBooks = await UserBook.findAll({
-          where: { userId: foundUserId, bookId },
-          include: ["book", "user"],
-        });
-      } else if (foundUserId) {
-        userBooks = await UserBook.findAll({
-          where: { userId: foundUserId },
-          include: ["book", "user"],
-        });
+      if (!foundUserId) {
+        return [];
       }
 
-      return userBooks;
+      const where = { userId: foundUserId };
+
+      if (bookId) {
+        where.bookId = bookId;
+      }
+
+      const foundUserBooks = await UserBook.findAll({
+        where,
+        include: { all: true, nested: true },
+        order: [["createdAt", "DESC"]],
+      });
+
+      return foundUserBooks;
     },
 
     async userBooksCategories(_, { userId, nickname }) {
@@ -37,7 +49,11 @@ export default {
 
       if (nickname) {
         const user = await User.findOne({ where: { nickname } });
-        foundUserId = user ? user.id : foundUserId;
+        foundUserId = user ? user.id : null;
+      }
+
+      if (!foundUserId) {
+        return [];
       }
 
       const userBooks = await UserBook.findAll({
@@ -68,20 +84,31 @@ export default {
           throw new UserInputError("Errors", errors);
         }
 
+        let book = null;
+
+        if (newBookInput.id) {
+          book = await Book.findOne({
+            where: { id: newBookInput.id },
+          });
+        }
+
+        if (!book && newBookInput.googleBooksId) {
+          book = await Book.findOne({
+            where: { googleBooksId: newBookInput.googleBooksId },
+          });
+        }
+
+        if (!book) {
+          book = await Book.create(newBookInput);
+        }
+
         const alreadyCreatedUserBook = await UserBook.findOne({
-          where: { bookId: newBookInput.id, userId: user.id, category },
+          where: { bookId: book.id, userId: user.id, category },
         });
 
         if (alreadyCreatedUserBook) {
           const errors = { category: "Book is already in this category" };
           throw new UserInputError("Errors", errors);
-        }
-
-        const { id } = newBookInput;
-        let book = await Book.findOne({ where: { id } });
-
-        if (!book) {
-          book = await Book.create(newBookInput);
         }
 
         let newUserBook = await UserBook.create({
@@ -93,7 +120,7 @@ export default {
 
         newUserBook = await UserBook.findOne({
           where: { id: newUserBook.id },
-          include: ["book", "user"],
+          include: { all: true, nested: true },
         });
 
         return newUserBook;
@@ -102,24 +129,49 @@ export default {
       throw new AuthenticationError("Sorry, you're not an authenticated user!");
     },
 
-    async deleteUserBook(_, { id }, { user }) {
+    async updateUserBook(_, { userBookId, category }, { user }) {
+      if (user) {
+        const foundUserBook = await UserBook.findOne({
+          where: { id: userBookId },
+          include: { all: true, nested: true },
+        });
+
+        if (!foundUserBook) {
+          throw new UserInputError("UserBook with provided id does not exist");
+        }
+
+        if (foundUserBook.userId !== user.id) {
+          throw new UserInputError("Sorry, you're not the owner of this item!");
+        }
+
+        const updatedUserBook = await foundUserBook.update({
+          category,
+        });
+
+        return updatedUserBook;
+      }
+
+      throw new AuthenticationError("Sorry, you're not an authenticated user!");
+    },
+
+    async deleteUserBook(_, { userBookId }, { user }) {
       if (user) {
         const deletedUserBook = await UserBook.findOne({
-          where: { id },
-          include: ["user", "book"],
+          where: { id: userBookId },
+          include: { all: true, nested: true },
         });
 
         if (!deletedUserBook) {
           throw new UserInputError("UserBook with provided id does not exist");
         }
 
-        if (deletedUserBook.user.id !== user.id) {
+        if (deletedUserBook.userId !== user.id) {
           throw new UserInputError("Sorry, you're not the owner of this item!");
         }
 
         await deletedUserBook.destroy();
 
-        return deletedUserBook;
+        return "UserBook deleted successfully";
       }
 
       throw new AuthenticationError("Sorry, you're not an authenticated user!");

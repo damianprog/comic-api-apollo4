@@ -24,7 +24,7 @@ const typeDefs = gql`
   type Book {
     id: ID!
     googleBooksId: String!
-    title: String
+    title: String!
     authors: [String]
     description: String
     thumbnail: String
@@ -73,21 +73,52 @@ const typeDefs = gql`
     user: User
   }
 
+  union UserActivity = Review | UserBook | Comment
+
   type Query {
     getUsers: [User]
     getUser(id: ID!): User
-
     book(id: ID!): Book
     books: [Book]
-    searchBooks(title: String!): [Book]
-
+    searchBooks(query: String!): [Book]
     review(id: ID!): Review
     reviews(bookId: ID!): [Review]
-
     userBook(id: ID!): UserBook
-    userBooks: [UserBook]
+    userBooks(userId: ID, nickname: String, bookId: ID): [UserBook]
+    userBooksCategories(userId: ID, nickname: String): [String]
+    comment(id: ID!): Comment
+    comments(userBookId: ID, reviewId: ID): [Comment]
+    userActivities(
+      userId: ID!
+      quantity: Int
+      lastActivityCreatedAt: String
+    ): [UserActivity]
+  }
 
-    comments(userBookId: ID!): [Comment]
+  input NewBookInput {
+    googleBooksId: String!
+    title: String!
+    authors: [String]
+    description: String
+    thumbnail: String
+    publishedDate: String
+    publisher: String
+    pageCount: Int
+    categories: [String]
+    language: String
+  }
+
+  input UpdateBookInput {
+    googleBooksId: String
+    title: String
+    authors: [String]
+    description: String
+    thumbnail: String
+    publishedDate: String
+    publisher: String
+    pageCount: Int
+    categories: [String]
+    language: String
   }
 
   type Mutation {
@@ -101,60 +132,22 @@ const typeDefs = gql`
 
     login(email: String!, password: String!): User!
 
-    createBook(
-      googleBooksId: String!
-      title: String
-      authors: [String]
-      description: String
-      thumbnail: String
-      publishedDate: String
-      publisher: String
-      pageCount: Int
-      categories: [String]
-      language: String
-    ): Book!
+    createBook(newBookInput: NewBookInput!): Book!
 
-    updateBook(
-      bookId: ID!
-      googleBooksId: String
-      title: String
-      authors: [String]
-      description: String
-      thumbnail: String
-      publishedDate: String
-      publisher: String
-      pageCount: Int
-      categories: [String]
-      language: String
-    ): Book!
+    updateBook(bookId: ID!, updateBookInput: UpdateBookInput!): Book!
 
     deleteBook(bookId: ID!): String!
 
-    createReview(bookId: ID!, text: String, typename: String): Review!
-
-    updateReview(reviewId: ID!, text: String, typename: String): Review!
-
+    createReview(bookId: ID!, text: String): Review!
+    updateReview(reviewId: ID!, text: String): Review!
     deleteReview(reviewId: ID!): String!
 
-    createUserBook(bookId: ID!, typename: String, category: String): UserBook!
-
-    updateUserBook(
-      userBookId: ID!
-      typename: String
-      category: String
-    ): UserBook!
-
+    createUserBook(newBookInput: NewBookInput!, category: String): UserBook!
+    updateUserBook(userBookId: ID!, category: String): UserBook!
     deleteUserBook(userBookId: ID!): String!
 
-    createComment(
-      text: String
-      reviewId: ID
-      userBookId: ID
-      typename: String
-    ): Comment!
-
-    updateComment(commentId: ID!, text: String, typename: String): Comment!
-
+    createComment(text: String, reviewId: ID, userBookId: ID): Comment!
+    updateComment(commentId: ID!, text: String): Comment!
     deleteComment(commentId: ID!): String!
   }
 `;
